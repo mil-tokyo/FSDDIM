@@ -1,0 +1,72 @@
+experiment_type: diffusion
+variables:
+  image_size: 32
+  channels: 1
+  n_steps: 8 # timestep
+network:
+  epochs: 1500
+  batch_size: 256
+  n_steps: $n_steps
+  dataset: MNIST
+  in_channels: $channels
+  data_path: "./data"
+  lr: 1.0e-3
+  image_size: $image_size
+  random_horizontal_flip: false
+  train_steps_per_epoch: null
+  test_steps_per_epoch: null
+  soft_reset: false
+  calc_fid: true
+  calc_fid_step: 150
+  calc_metrics_at_last: false
+  num_fid_sample: 1000
+  fid_calc_batch_mult: 0.5
+  layer_config:
+    surrogate_function: triangle
+    downsampling: avg_pool
+    Vth: 1.0
+    tau: 0.8
+    detach_reset: true
+  models:
+    model:
+      class: snn_model.SpikingUNetV2
+      args:
+        image_size: $image_size
+        in_ch: $channels
+        ch: 128
+        out_ch: $channels
+        ch_mult: [1, 2, 3, 4]
+        num_res_blocks: 2
+        dropout: 0.0
+        n_steps: $n_steps
+        max_time: 1000
+        activate_first_conv: false
+        spike_up_down: false
+    encoder:
+      class: snn_model.DirectInputEncoder
+      args:
+        n_steps: $n_steps
+    decoder:
+      class: snn_model.AverageDecoder
+  scheduler:
+    class: null
+  diffusion:
+    image_size: $image_size
+    channels: $channels
+    timesteps: 1000
+    beta_schedule: cosine
+    objective: pred_v
+  find_unused_parameters: true
+  loss:
+    image_level_loss: true
+    spike_level_loss: false
+    recons_loss: true
+  metrics:
+    sample: true
+    fid: true
+    fad: true
+    calc_mul_add: true
+    calc_mul_add_sample: 100
+    num_images: 10000
+    sampling_batch_size_per_process: 250
+    batch_size: 250
